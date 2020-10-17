@@ -27,3 +27,44 @@ for i in range(6):
   plt.subplot(2,3, i+1)
   plt.imshow(samples[i][0], cmap='gray')
 plt.show()
+
+def MnistModule(input_size, hidden_size, num_classes):
+  return nn.Sequential(nn.Linear(input_size, hidden_size), nn.ReLU(), nn.Linear(hidden_size, num_classes))
+model = MnistModule(input_size, hidden_size, num_classes)
+
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+num_steps = len(train_loader)
+for epoch in range(num_epochs):
+  for i, (images, labels) in enumerate(train_loader):
+    images = images.reshape(-1,28*28).to(device)
+    labesl = labels.to(device)
+
+    # Forward Pass
+    outputs = model(images)
+    loss = criterion(outputs, labels)
+
+    # Backward Pass
+    loss.backward()
+    optimizer.step()
+
+    optimizer.zero_grad()
+
+    if (i+1) % 100 == 0:
+      print(f'epoch {epoch+1} Out of {num_epochs}, step {i+1} Out of {num_steps}, loss = {loss.item():.4}')
+
+
+n_correct = 0
+n_samples = 0
+for images, labels in test_loader:
+  images = images.reshape(-1, 28*28).to(device)
+  labels = labels.to(device)
+  outputs = model(images)
+
+  _, predictions = torch.max(outputs, 1)
+  n_samples += labels.shape[0]
+  n_correct += (predictions == labels).sum().item()
+
+acc = 100.0 * n_correct/n_samples
+print(f'Accuracy {acc}')
